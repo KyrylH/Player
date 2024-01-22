@@ -28,6 +28,7 @@ import com.example.player.service.PlayerService
 import com.example.player.ui.fragment.ELEMENT
 import com.example.player.ui.fragment.TrackList
 import com.example.player.util.BottomNavPlayerSelection
+import com.example.player.util.DurationCalcUtil
 import com.example.player.util.viewModelFactory
 import com.example.player.viewmodel.TrackViewModel
 
@@ -119,18 +120,15 @@ class MainActivity : AppCompatActivity(), PlayerButtonsListener {
         exoPlayer.addListener(exoPlayerListener)
     }
     private fun setPlayerControllerViews() {
-        binding.trackName.text = exoPlayer.currentMediaItem!!.mediaMetadata.title
-        binding.trackAuthor.text = exoPlayer.currentMediaItem!!.mediaMetadata.artist
-        val image = if (exoPlayer.currentMediaItem!!.mediaMetadata.artworkData != null) {
-            BitmapFactory.decodeByteArray(
-                exoPlayer.currentMediaItem!!.mediaMetadata.artworkData,
-                0,
-                exoPlayer.currentMediaItem!!.mediaMetadata.artworkData!!.size
-            )
-        } else {
-            BitmapFactory.decodeResource(resources, R.drawable.baseline_music_note_24)
+        exoPlayer.currentMediaItem?.let {
+            binding.trackName.text = it.mediaMetadata.title
+            binding.trackAuthor.text = it.mediaMetadata.artist
         }
-        binding.coverImage.setImageBitmap(image)
+        exoPlayer.currentMediaItem?.mediaMetadata?.artworkData?.let {
+            binding.coverImage.setImageBitmap(
+                BitmapFactory.decodeByteArray(it, 0, it.size)
+            )
+        }
     }
     private fun setPlayerControllerListener() {
         binding.playPauseButton.setOnClickListener {
@@ -254,8 +252,14 @@ class MainActivity : AppCompatActivity(), PlayerButtonsListener {
         Looper.myLooper()?.let {
             Handler(it).postDelayed({
                 if (exoPlayer.isPlaying) {
-                    binding.playerView.seekBar.progress = exoPlayer.currentPosition.toInt()
                     binding.playerView.seekBar.max = exoPlayer.duration.toInt()
+                    binding.playerView.trackDuration.text = DurationCalcUtil.calcDuration(
+                        exoPlayer.duration
+                    )
+                    binding.playerView.seekBar.progress = exoPlayer.currentPosition.toInt()
+                    binding.playerView.currentDuration.text = DurationCalcUtil.calcDuration(
+                        exoPlayer.currentPosition
+                    )
                 }
                 updateSeekBarPosition()
             }, 1000)

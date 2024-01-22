@@ -12,6 +12,7 @@ import com.example.player.R
 import com.example.player.databinding.TrackItemBinding
 import com.example.player.model.Track
 import com.example.player.ui.fragment.OnElementClickedListener
+import com.example.player.util.DurationCalcUtil
 
 class TrackItemAdapter(
     private val listener: OnElementClickedListener
@@ -33,7 +34,7 @@ class TrackItemAdapter(
                 trackName.text = track.title.lastIndexOf(".").let {
                     track.title.subSequence(0, it)
                 }
-                trackDuration.text = calcDuration(track.duration)
+                trackDuration.text = DurationCalcUtil.calcDuration(track.duration)
 
                 val temp: ByteArray? = metadataRetriever.let{
                     try {
@@ -71,19 +72,7 @@ class TrackItemAdapter(
         }
     }
 
-    private fun calcDuration(millis: Long): String {
-        val seconds = ((millis / 1000) % 60)
-        val minutes = ((millis / (1000 * 60)) % 60)
-        val hours = ((millis / (1000 * 60 * 60)) % 24)
-        val secondsString = if (seconds.toString().length == 1) "0$seconds" else seconds
-        val minutesString = if (minutes.toString().length == 1) "0$minutes" else minutes
-        val hoursString = if (hours.toString().length == 1) "0$hours" else hours
-        return if (hours > 0) {
-            "$hoursString:$minutesString:$secondsString"
-        } else {
-            "$minutesString:$secondsString"
-        }
-    }
+
 
     class ViewHolder(
         val binding: TrackItemBinding
