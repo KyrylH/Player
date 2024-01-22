@@ -59,10 +59,6 @@ class MainActivity : AppCompatActivity(), PlayerButtonsListener {
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
             setPlayerViewViews()
             setPlayerControllerViews()
-
-            if (exoPlayer.playbackState == Player.STATE_READY) {
-                exoPlayer.play()
-            }
             super.onMediaItemTransition(mediaItem, reason)
         }
         override fun onIsPlayingChanged(isPlaying: Boolean) {
@@ -109,10 +105,12 @@ class MainActivity : AppCompatActivity(), PlayerButtonsListener {
         setPlayerControllerListener()
     }
     override fun onDestroy() {
-        if (exoPlayer.isPlaying) {
-            exoPlayer.stop()
+        exoPlayer.apply {
+            if (isPlaying) {
+                stop()
+            }
+            release()
         }
-        exoPlayer.release()
         doUnbindService(this)
         super.onDestroy()
     }
@@ -124,7 +122,11 @@ class MainActivity : AppCompatActivity(), PlayerButtonsListener {
         binding.trackName.text = exoPlayer.currentMediaItem!!.mediaMetadata.title
         binding.trackAuthor.text = exoPlayer.currentMediaItem!!.mediaMetadata.artist
         val image = if (exoPlayer.currentMediaItem!!.mediaMetadata.artworkData != null) {
-            BitmapFactory.decodeByteArray(exoPlayer.currentMediaItem!!.mediaMetadata.artworkData, 0, exoPlayer.currentMediaItem!!.mediaMetadata.artworkData!!.size)
+            BitmapFactory.decodeByteArray(
+                exoPlayer.currentMediaItem!!.mediaMetadata.artworkData,
+                0,
+                exoPlayer.currentMediaItem!!.mediaMetadata.artworkData!!.size
+            )
         } else {
             BitmapFactory.decodeResource(resources, R.drawable.baseline_music_note_24)
         }
@@ -241,7 +243,6 @@ class MainActivity : AppCompatActivity(), PlayerButtonsListener {
     private fun doBindService(ctx: Context) {
         val intent = Intent(ctx, PlayerService::class.java)
         ctx.bindService(intent, connection, Context.BIND_AUTO_CREATE)
-
     }
     private fun doUnbindService(ctx: Context) {
         if (bound) {
@@ -271,15 +272,13 @@ class MainActivity : AppCompatActivity(), PlayerButtonsListener {
             BottomNavPlayerSelection.FAVORITES -> trackViewModel.getMediaItemsFavorites()
         })
     }
-    override fun play(idx: Int, pos: Long) {
-        exoPlayer.setMediaItems(
-            when (selection) {
-                BottomNavPlayerSelection.ALL -> trackViewModel.getMediaItems()
-                BottomNavPlayerSelection.FAVORITES -> trackViewModel.getMediaItemsFavorites()
-            }
-        )
-        exoPlayer.seekTo(idx, pos)
-        exoPlayer.play()
+    override fun play(trackPos: Int, durPos: Long) {
+        setMediaItems()
+        exoPlayer.apply {
+            seekTo(trackPos, durPos)
+            prepare()
+            play()
+        }
     }
     override fun pause() {
         exoPlayer.pause()

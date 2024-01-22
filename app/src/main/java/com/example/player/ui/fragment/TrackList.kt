@@ -66,11 +66,6 @@ class TrackList : Fragment(), OnElementClickedListener {
             onItemClicked(position)
         }
     }
-    override fun setMediaItems(mediaItems: List<MediaItem>) {
-        listener.apply {
-            setMediaItems(mediaItems)
-        }
-    }
 
     companion object {
         @JvmStatic

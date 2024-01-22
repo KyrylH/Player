@@ -13,7 +13,8 @@ import com.example.player.databinding.TrackItemBinding
 import com.example.player.model.Track
 import com.example.player.ui.fragment.OnElementClickedListener
 
-class TrackItemAdapter(private val listener: OnElementClickedListener
+class TrackItemAdapter(
+    private val listener: OnElementClickedListener
 ): ListAdapter<Track, TrackItemAdapter.ViewHolder>(TrackItemDiffCallback()) {
     private lateinit var binding: TrackItemBinding
     private lateinit var ctx: Context
@@ -23,20 +24,20 @@ class TrackItemAdapter(private val listener: OnElementClickedListener
         binding = TrackItemBinding
             .inflate(LayoutInflater.from(parent.context), parent, false)
         ctx = binding.root.context
-        return TrackItemAdapter.ViewHolder(binding)
+        return ViewHolder(binding)
     }
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         getItem(position).let { track ->
                 with(holder.binding){
                 authorName.text = track.artist
-                trackName.text = track.title.lastIndexOf(".")?.let {
+                trackName.text = track.title.lastIndexOf(".").let {
                     track.title.subSequence(0, it)
                 }
                 trackDuration.text = calcDuration(track.duration)
 
                 val temp: ByteArray? = metadataRetriever.let{
                     try {
-                        metadataRetriever.setDataSource("${track.path}")
+                        metadataRetriever.setDataSource(track.path)
                         it.embeddedPicture
                     } catch (e : Exception) {
                         null
