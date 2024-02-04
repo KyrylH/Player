@@ -1,5 +1,6 @@
-package com.example.player.ui.fragment
+package com.example.player.ui.fragment.tracklist
 
+import android.graphics.Bitmap
 import android.os.Build
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -9,11 +10,11 @@ import android.view.ViewGroup
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.LifecycleOwner
-import androidx.media3.common.MediaItem
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.player.adapter.TrackItemAdapter
 import com.example.player.databinding.FragmentTracklistBinding
+import com.example.player.model.Track
 import com.example.player.ui.MainActivity
 import com.example.player.ui.PlayerButtonsListener
 import com.example.player.util.BottomNavPlayerSelection
@@ -47,7 +48,7 @@ class TrackList : Fragment(), OnElementClickedListener {
 
         binding.root.apply {
             adapter = itemAdapter
-            navPlayerSelectionStrategy[selection]!!.observe(this@TrackList as LifecycleOwner) {
+            navPlayerSelectionStrategy[selection]?.observe(this@TrackList as LifecycleOwner) {
                 itemAdapter.submitList(it)
             }
             layoutManager = LinearLayoutManager(context)
@@ -59,7 +60,7 @@ class TrackList : Fragment(), OnElementClickedListener {
     }
 
     override fun onFavoriteClicked(contentId: Long) {
-        viewModel.favorite(contentId)
+        viewModel.changeFavoriteTrackState(contentId)
     }
     override fun onItemClicked(position: Int) {
         listener.apply {

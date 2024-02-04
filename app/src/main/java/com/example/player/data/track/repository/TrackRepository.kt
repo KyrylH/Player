@@ -1,7 +1,7 @@
-package com.example.player.database.repository
+package com.example.player.data.track.repository
 
 import com.example.player.database.TrackDataBase
-import com.example.player.database.dto.TrackDto
+import com.example.player.data.track.dto.TrackDto
 
 class TrackRepository(private val trackDb: TrackDataBase) {
     private val trackDao = trackDb.trackDao()

@@ -1,4 +1,4 @@
-package com.example.player.ui.fragment
+package com.example.player.ui.fragment.tracklist
 
 interface OnElementClickedListener {
     fun onFavoriteClicked(contentId: Long)

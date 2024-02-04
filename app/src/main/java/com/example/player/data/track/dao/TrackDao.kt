@@ -1,10 +1,9 @@
-package com.example.player.database.dao
+package com.example.player.data.track.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
-import com.example.player.database.dto.TrackDto
-import kotlinx.coroutines.flow.Flow
+import com.example.player.data.track.dto.TrackDto
 
 @Dao
 interface TrackDao {

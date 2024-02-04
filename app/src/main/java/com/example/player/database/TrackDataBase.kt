@@ -4,8 +4,8 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.example.player.database.dao.TrackDao
-import com.example.player.database.dto.TrackDto
+import com.example.player.data.track.dao.TrackDao
+import com.example.player.data.track.dto.TrackDto
 import kotlin.concurrent.Volatile
 
 @Database(entities = [TrackDto::class,], version = 1,)

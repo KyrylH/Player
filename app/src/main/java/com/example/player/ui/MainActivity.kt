@@ -1,9 +1,11 @@
 package com.example.player.ui
 
+import android.Manifest
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
@@ -11,34 +13,43 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.util.Log
 import android.view.View
 import android.widget.SeekBar
+import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.commit
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModelProvider
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import com.bumptech.glide.Glide
 import com.example.player.R
-import com.example.player.database.TrackDataBase
 import com.example.player.databinding.ActivityMainBinding
 import com.example.player.service.PlayerService
-import com.example.player.ui.fragment.ELEMENT
-import com.example.player.ui.fragment.TrackList
+import com.example.player.ui.fragment.tracklist.ELEMENT
+import com.example.player.ui.fragment.tracklist.TrackList
+import com.example.player.ui.fragment.tracknotfound.TrackNotFound
 import com.example.player.util.BottomNavPlayerSelection
 import com.example.player.util.DurationCalcUtil
 import com.example.player.util.viewModelFactory
 import com.example.player.viewmodel.TrackViewModel
+import com.google.android.material.snackbar.Snackbar
 
 class MainActivity : AppCompatActivity(), PlayerButtonsListener {
     private lateinit var exoPlayer: ExoPlayer
-    private lateinit var trackViewModel: TrackViewModel
     private var bound = false
     private var selection = BottomNavPlayerSelection.ALL
-    private val dataBase: TrackDataBase by lazy {
-        TrackDataBase.getDataBase(context = applicationContext)
+
+    private val trackViewModel : TrackViewModel by lazy {
+        ViewModelProvider(
+            this@MainActivity, viewModelFactory {
+                TrackViewModel(application)
+            }
+        )[TrackViewModel::class.java]
     }
     private val binding: ActivityMainBinding by lazy {
         ActivityMainBinding.inflate(layoutInflater)
@@ -50,42 +61,74 @@ class MainActivity : AppCompatActivity(), PlayerButtonsListener {
             bound = true
 
             setMediaItems()
-            setExoPlayerListener()
+            exoPlayer.addListener(object : Player.Listener {
+                override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+                    setPlayerViewViews()
+                    setPlayerControllerViews()
+                    super.onMediaItemTransition(mediaItem, reason)
+                }
+                override fun onIsPlayingChanged(isPlaying: Boolean) {
+                    if (isPlaying) {
+                        binding.playerView.playPauseButton.setImageResource(R.drawable.baseline_pause_24)
+                        binding.playPauseButton.setImageResource(R.drawable.baseline_pause_24)
+                    } else {
+                        binding.playerView.playPauseButton.setImageResource(R.drawable.baseline_play_arrow_24)
+                        binding.playPauseButton.setImageResource(R.drawable.baseline_play_arrow_24)
+                    }
+                    super.onIsPlayingChanged(isPlaying)
+                }
+            })
         }
         override fun onServiceDisconnected(name: ComponentName?) {
             bound = false
         }
     }
-    private val exoPlayerListener = object : Player.Listener {
-        override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-            setPlayerViewViews()
-            setPlayerControllerViews()
-            super.onMediaItemTransition(mediaItem, reason)
-        }
-        override fun onIsPlayingChanged(isPlaying: Boolean) {
-            if (isPlaying) {
-                binding.playerView.playPauseButton.setImageResource(R.drawable.baseline_pause_24)
-                binding.playPauseButton.setImageResource(R.drawable.baseline_pause_24)
-            } else {
-                binding.playerView.playPauseButton.setImageResource(R.drawable.baseline_play_arrow_24)
-                binding.playPauseButton.setImageResource(R.drawable.baseline_play_arrow_24)
-            }
-            super.onIsPlayingChanged(isPlaying)
-        }
-    }
+
+    private var notGrantedPermission: MutableList<String> = mutableListOf()
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
-        trackViewModel = ViewModelProvider(
-            this, viewModelFactory {
-                TrackViewModel(dataBase, contentResolver)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ActivityCompat.requestPermissions(this,
+                LATEST_VERSION_PERMISSIONS, REQ_CODE)
+        } else {
+            ActivityCompat.requestPermissions(this,
+                OLDER_VERSION_PERMISSION, REQ_CODE)
+        }
+        for (p in if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+            LATEST_VERSION_PERMISSIONS else OLDER_VERSION_PERMISSION) {
+            if (checkSelfPermission(p) != PackageManager.PERMISSION_GRANTED) {
+                notGrantedPermission.add(p)
             }
-        )[TrackViewModel::class.java]
-        ActivityCompat.requestPermissions(this,
-            arrayOf(NOTIFICATION_PERMISSION, WRITE_PERMISSION, READ_EXTERNAL_STORAGE), REQ_CODE)
-        doBindService(this)
+        }
+        if (notGrantedPermission.isNotEmpty()) {
+            Toast.makeText(
+                    this,
+                    "Not all permissions has been granted",
+                    Toast.LENGTH_LONG
+                ).show()
+        }
+        trackViewModel.getAll().observe(this as LifecycleOwner) {
+            if (it.isNotEmpty()) {
+                doBindService(this)
+                supportFragmentManager.commit {
+                    replace(R.id.fragment_container, TrackList::class.java, Bundle().apply {
+                        putString(
+                            ELEMENT,
+                            BottomNavPlayerSelection.ALL.name)
+                    })
+                }
+                setPlayerViewListeners()
+                setBottomNavListener()
+                setPlayerControllerListener()
+            } else {
+                supportFragmentManager.commit {
+                    replace(R.id.fragment_container, TrackNotFound::class.java, Bundle())
+                }
+            }
+        }
         onBackPressedDispatcher.addCallback(this) {
             if (binding.playerView.playerView.visibility == View.VISIBLE) {
                 binding.playerView.playerView.visibility = View.GONE
@@ -94,16 +137,6 @@ class MainActivity : AppCompatActivity(), PlayerButtonsListener {
                 finish()
             }
         }
-        supportFragmentManager.commit {
-            replace(R.id.fragment_container, TrackList::class.java, Bundle().apply {
-                putString(ELEMENT,
-                    BottomNavPlayerSelection.ALL.name)
-            })
-        }
-
-        setPlayerViewListeners()
-        setBottomNavListener()
-        setPlayerControllerListener()
     }
     override fun onDestroy() {
         exoPlayer.apply {
@@ -116,9 +149,6 @@ class MainActivity : AppCompatActivity(), PlayerButtonsListener {
         super.onDestroy()
     }
 
-    private fun setExoPlayerListener() {
-        exoPlayer.addListener(exoPlayerListener)
-    }
     private fun setPlayerControllerViews() {
         exoPlayer.currentMediaItem?.let {
             binding.trackName.text = it.mediaMetadata.title
@@ -159,7 +189,8 @@ class MainActivity : AppCompatActivity(), PlayerButtonsListener {
                     selection = BottomNavPlayerSelection.ALL
                     supportFragmentManager.commit {
                         replace(R.id.fragment_container, TrackList::class.java, Bundle().apply {
-                            putString(ELEMENT,
+                            putString(
+                                ELEMENT,
                                 BottomNavPlayerSelection.ALL.name)
                         })
                     }
@@ -169,7 +200,8 @@ class MainActivity : AppCompatActivity(), PlayerButtonsListener {
                     selection = BottomNavPlayerSelection.FAVORITES
                     supportFragmentManager.commit {
                         replace(R.id.fragment_container, TrackList::class.java, Bundle().apply {
-                            putString(ELEMENT,
+                            putString(
+                                ELEMENT,
                                 BottomNavPlayerSelection.FAVORITES.name)
                         })
                     }
@@ -180,10 +212,14 @@ class MainActivity : AppCompatActivity(), PlayerButtonsListener {
         }
     }
     private fun setPlayerViewViews() {
-        binding.playerView.cover.setImageBitmap(exoPlayer.currentMediaItem!!.mediaMetadata.artworkData?.let {
-            BitmapFactory.decodeByteArray(it, 0, it.size)
-        } ?: BitmapFactory.decodeResource(resources, R.drawable.baseline_music_note_24))
         binding.playerView.name.text = exoPlayer.currentMediaItem!!.mediaMetadata.title!!
+        Glide.with(this)
+            .load(exoPlayer.currentMediaItem!!.mediaMetadata.artworkData?.let {
+                BitmapFactory.decodeByteArray(it, 0, it.size)
+            } ?: BitmapFactory.decodeResource(resources, R.drawable.baseline_music_note_24))
+            .placeholder(R.drawable.baseline_music_note_24)
+            .circleCrop()
+            .into(binding.playerView.cover)
         if (exoPlayer.isPlaying) {
             binding.playerView.playPauseButton.setImageResource(R.drawable.baseline_pause_24)
         } else {
@@ -230,12 +266,13 @@ class MainActivity : AppCompatActivity(), PlayerButtonsListener {
         binding.playerControl.visibility = View.VISIBLE
         binding.trackName.text = mediaItem.mediaMetadata.title
         binding.trackAuthor.text = mediaItem.mediaMetadata.artist
-        val image = if (mediaItem.mediaMetadata.artworkData != null) {
+        Glide.with(this).load(if (mediaItem.mediaMetadata.artworkData != null) {
             BitmapFactory.decodeByteArray(mediaItem.mediaMetadata.artworkData, 0, mediaItem.mediaMetadata.artworkData!!.size)
         } else {
             BitmapFactory.decodeResource(resources, R.drawable.baseline_music_note_24)
-        }
-        binding.coverImage.setImageBitmap(image)
+        }).circleCrop()
+            .placeholder(R.drawable.baseline_music_note_24)
+            .into(binding.coverImage)
     }
 
     private fun doBindService(ctx: Context) {
@@ -273,13 +310,13 @@ class MainActivity : AppCompatActivity(), PlayerButtonsListener {
     override fun setMediaItems() {
         exoPlayer.setMediaItems(when(selection) {
             BottomNavPlayerSelection.ALL -> trackViewModel.getMediaItems()
-            BottomNavPlayerSelection.FAVORITES -> trackViewModel.getMediaItemsFavorites()
+            BottomNavPlayerSelection.FAVORITES -> trackViewModel.getMediaItems(isFavorite = true)
         })
     }
-    override fun play(trackPos: Int, durPos: Long) {
+    override fun play(idx: Int, pos: Long) {
         setMediaItems()
         exoPlayer.apply {
-            seekTo(trackPos, durPos)
+            seekTo(idx, pos)
             prepare()
             play()
         }
@@ -289,10 +326,18 @@ class MainActivity : AppCompatActivity(), PlayerButtonsListener {
     }
 
     companion object {
-        private const val WRITE_PERMISSION = android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+        private const val WRITE_PERMISSION = Manifest.permission.WRITE_EXTERNAL_STORAGE
+        private const val READ_EXTERNAL_STORAGE = Manifest.permission.READ_EXTERNAL_STORAGE
         @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-        private const val NOTIFICATION_PERMISSION = android.Manifest.permission.POST_NOTIFICATIONS
-        private const val READ_EXTERNAL_STORAGE = android.Manifest.permission.READ_EXTERNAL_STORAGE
+        private const val NOTIFICATION_PERMISSION = Manifest.permission.POST_NOTIFICATIONS
+        @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+        private const val READ_MEDIA_AUDIO = Manifest.permission.READ_MEDIA_AUDIO
+        @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+        private val LATEST_VERSION_PERMISSIONS = arrayOf(NOTIFICATION_PERMISSION,READ_MEDIA_AUDIO)
+        private val OLDER_VERSION_PERMISSION = arrayOf(
+            WRITE_PERMISSION,
+            READ_EXTERNAL_STORAGE
+        )
         private const val REQ_CODE = 0
     }
 }

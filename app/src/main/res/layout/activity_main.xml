@@ -34,7 +34,7 @@
             android:id="@+id/player_control"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:visibility="visible"
+            android:visibility="gone"
             app:layout_constraintBottom_toTopOf="@id/bottom_nav"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"

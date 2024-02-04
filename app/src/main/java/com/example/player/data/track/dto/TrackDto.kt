@@ -1,4 +1,4 @@
-package com.example.player.database.dto
+package com.example.player.data.track.dto
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

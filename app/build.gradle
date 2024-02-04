@@ -2,6 +2,7 @@ plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
     id 'com.google.devtools.ksp' version "1.9.10-1.0.13"
+    id 'com.google.dagger.hilt.android'
     id 'kotlin-parcelize'
 }
 
@@ -43,11 +44,16 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.media3:media3-exoplayer:1.2.0'
-    implementation 'androidx.media3:media3-ui:1.2.0'
+    implementation 'androidx.media3:media3-exoplayer:1.2.1'
+    implementation 'androidx.media3:media3-ui:1.2.1'
     def navVersion = "2.7.6"
     def roomVersion = "2.6.1"
     def lifecycleVersion = "2.7.0"
+
+    implementation "com.google.dagger:hilt-android:2.44"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0"
+    ksp "com.google.dagger:hilt-compiler:2.44"
+    ksp "androidx.hilt:hilt-compiler:1.1.0"
 
     implementation "com.github.bumptech.glide:glide:4.16.0"
     implementation "androidx.room:room-runtime:$roomVersion"

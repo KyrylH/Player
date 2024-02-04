@@ -91,7 +91,7 @@ class PlayerService : Service() {
             .Builder(this, notificationId, channelId)
             .setMediaDescriptionAdapter(descriptionAdapter)
             .setNotificationListener(notificationListener)
-            .setChannelImportance(NotificationUtil.IMPORTANCE_HIGH)
+            .setChannelImportance(NotificationUtil.IMPORTANCE_LOW)
             .setSmallIconResourceId(R.drawable.baseline_music_note_24)
             .setChannelDescriptionResourceId(R.string.app_name)
             .setNextActionIconResourceId(R.drawable.baseline_skip_next_24)
@@ -102,7 +102,7 @@ class PlayerService : Service() {
             .build()
         notificationManager.apply {
             setPlayer(exoPlayer)
-            setPriority(NotificationCompat.PRIORITY_MAX)
+            setPriority(NotificationCompat.PRIORITY_HIGH)
             setUseRewindAction(false)
             setUseFastForwardAction(false)
             setUseStopAction(false)
