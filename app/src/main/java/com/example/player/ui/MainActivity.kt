@@ -26,6 +26,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.PlayerNotificationManager.Visibility
 import com.bumptech.glide.Glide
 import com.example.player.R
 import com.example.player.databinding.ActivityMainBinding
@@ -38,6 +39,8 @@ import com.example.player.util.DurationCalcUtil
 import com.example.player.util.viewModelFactory
 import com.example.player.viewmodel.TrackViewModel
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onEmpty
 
 class MainActivity : AppCompatActivity(), PlayerButtonsListener {
     private lateinit var exoPlayer: ExoPlayer
@@ -110,23 +113,23 @@ class MainActivity : AppCompatActivity(), PlayerButtonsListener {
                     Toast.LENGTH_LONG
                 ).show()
         }
-        trackViewModel.getAll().observe(this as LifecycleOwner) {
-            if (it.isNotEmpty()) {
-                doBindService(this)
-                supportFragmentManager.commit {
-                    replace(R.id.fragment_container, TrackList::class.java, Bundle().apply {
-                        putString(
-                            ELEMENT,
-                            BottomNavPlayerSelection.ALL.name)
-                    })
-                }
-                setPlayerViewListeners()
-                setBottomNavListener()
-                setPlayerControllerListener()
-            } else {
+        doBindService(this)
+        supportFragmentManager.commit {
+            replace(R.id.fragment_container, TrackList::class.java, Bundle().apply {
+                putString(
+                    ELEMENT,
+                    BottomNavPlayerSelection.ALL.name)
+            })
+        }
+        setPlayerViewListeners()
+        setBottomNavListener()
+        setPlayerControllerListener()
+        trackViewModel.isEmptyTrackList().onEach {
+            if (it) {
                 supportFragmentManager.commit {
                     replace(R.id.fragment_container, TrackNotFound::class.java, Bundle())
                 }
+                binding.bottomNav.visibility = View.GONE
             }
         }
         onBackPressedDispatcher.addCallback(this) {
@@ -148,7 +151,6 @@ class MainActivity : AppCompatActivity(), PlayerButtonsListener {
         doUnbindService(this)
         super.onDestroy()
     }
-
     private fun setPlayerControllerViews() {
         exoPlayer.currentMediaItem?.let {
             binding.trackName.text = it.mediaMetadata.title

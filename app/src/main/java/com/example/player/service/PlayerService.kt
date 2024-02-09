@@ -64,7 +64,7 @@ class PlayerService : Service() {
             callback: PlayerNotificationManager.BitmapCallback
         ): Bitmap? {
             val bitmap = player.currentMediaItem?.mediaMetadata?.artworkUri
-            var image : Bitmap? = if (bitmap == null) {
+            val image : Bitmap? = if (bitmap == null) {
                 AppCompatResources.getDrawable(this@PlayerService, R.drawable.baseline_music_note_24)?.toBitmap()
             }else {
                 BitmapDrawable(resources, bitmap.toString()).bitmap
