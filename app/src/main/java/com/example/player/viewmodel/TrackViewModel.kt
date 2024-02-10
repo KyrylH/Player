@@ -1,6 +1,8 @@
 package com.example.player.viewmodel
 
 import android.app.Application
+import android.content.Context
+import android.net.Uri
 import android.provider.MediaStore
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
@@ -14,6 +16,7 @@ import com.example.player.model.Track
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 
+
 //    viewmodel for track activity
 //    it is responsible for fetching data from content provider and updating the database
 //    it also provides data to the activity
@@ -26,6 +29,7 @@ class TrackViewModel (
 
     private val _trackList: MutableLiveData<List<Track>> = initTrackList()
 
+    //    reinitializing track list
     fun onReinit() {
         _trackList.value = initTrackList().value
     }
@@ -98,17 +102,19 @@ class TrackViewModel (
             )?.use { cursor ->
                 while (cursor.moveToNext()) {
                     with(cursor) {
+                        val path = getString(getColumnIndexOrThrow(PROJ[5]))
                         trackList.add(Track(
-                            getLong(getColumnIndexOrThrow(PROJ[0])),
-                            getString(getColumnIndexOrThrow(PROJ[1])),
-                            getString(getColumnIndexOrThrow(PROJ[2])),
-                            getString(getColumnIndexOrThrow(PROJ[3])),
-                            getLong(getColumnIndexOrThrow(PROJ[4])),
-                            getString(getColumnIndexOrThrow(PROJ[5]))
+                            contentId = getLong(getColumnIndexOrThrow(PROJ[0])),
+                            title = getString(getColumnIndexOrThrow(PROJ[1])),
+                            artist = getString(getColumnIndexOrThrow(PROJ[2])),
+                            album = getString(getColumnIndexOrThrow(PROJ[3])),
+                            duration = getLong(getColumnIndexOrThrow(PROJ[4])),
+                            path = path
                         ))
                     }
                 }
             }
+
         }
         result.await()
         return trackList

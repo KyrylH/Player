@@ -38,17 +38,16 @@ class TrackItemAdapter(
                     }
                 } else track.title
                 trackDuration.text = DurationCalcUtil.calcDuration(track.duration)
-
+                val image = metadataRetriever.let {
+                    try {
+                        metadataRetriever.setDataSource(track.path)
+                        it.embeddedPicture
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
                 Glide.with(ctx)
-                    .load(
-                        metadataRetriever.let {
-                            try {
-                                metadataRetriever.setDataSource(track.path)
-                                it.embeddedPicture
-                            } catch (e: Exception) {
-                                null
-                            }
-                        })
+                    .load(image)
                     .placeholder(R.drawable.baseline_music_note_24)
                     .circleCrop()
                     .into(coverImage)

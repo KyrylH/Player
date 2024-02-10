@@ -361,7 +361,7 @@ class MainActivity : AppCompatActivity(), PlayerButtonsListener {
         private val LATEST_VERSION_PERMISSIONS = arrayOf(NOTIFICATION_PERMISSION,READ_MEDIA_AUDIO)
         private val OLDER_VERSION_PERMISSION = arrayOf(
             WRITE_PERMISSION,
-            READ_EXTERNAL_STORAGE
+            READ_EXTERNAL_STORAGE,
         )
         private const val REQ_CODE = 0
     }
