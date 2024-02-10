@@ -12,10 +12,11 @@ import com.example.player.data.track.repository.TrackRepository
 import com.example.player.database.TrackDataBase
 import com.example.player.model.Track
 import kotlinx.coroutines.async
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 
+//    viewmodel for track activity
+//    it is responsible for fetching data from content provider and updating the database
+//    it also provides data to the activity
 class TrackViewModel (
     private val application: Application
 ): AndroidViewModel(application) {
@@ -25,6 +26,12 @@ class TrackViewModel (
 
     private val _trackList: MutableLiveData<List<Track>> = initTrackList()
 
+    fun onReinit() {
+        _trackList.value = initTrackList().value
+    }
+
+    //    initializing track list
+    //    fetching data from content provider and updating the database
     private fun initTrackList(): MutableLiveData<List<Track>> {
         val tracks: MutableLiveData<List<Track>> = MutableLiveData()
         viewModelScope.launch {
@@ -54,6 +61,7 @@ class TrackViewModel (
         val temp = _trackList.value!!.filter { t -> t.favorite }
         return MutableLiveData(temp)
     }
+    //    for getting media items for playing music
     fun getMediaItems(isFavorite: Boolean = false): List<MediaItem> {
         val mediaItems = mutableListOf<MediaItem>()
         val tracks = if (isFavorite) _trackList.value!!.filter { t -> t.favorite }
@@ -105,12 +113,7 @@ class TrackViewModel (
         result.await()
         return trackList
     }
-    fun isEmptyTrackList(): Flow<Boolean> {
-        val isEmpty: Flow<Boolean> = flow {
-            trackRepository.isEmpty()
-        }
-        return isEmpty
-    }
+
     companion object {
         //   Selection query for music
         private const val SELECTION = "${MediaStore.Audio.Media.IS_MUSIC} != 0 and title != ''"

@@ -106,32 +106,21 @@ class MainActivity : AppCompatActivity(), PlayerButtonsListener {
                 notGrantedPermission.add(p)
             }
         }
-        if (notGrantedPermission.isNotEmpty()) {
-            Toast.makeText(
-                    this,
-                    "Not all permissions has been granted",
-                    Toast.LENGTH_LONG
-                ).show()
-        }
         doBindService(this)
-        supportFragmentManager.commit {
-            replace(R.id.fragment_container, TrackList::class.java, Bundle().apply {
-                putString(
-                    ELEMENT,
-                    BottomNavPlayerSelection.ALL.name)
-            })
+        // write when on permission granted and draw track list when permission granted
+        if (notGrantedPermission.isEmpty()) {
+            supportFragmentManager.commit {
+                replace(R.id.fragment_container, TrackList::class.java, Bundle().apply {
+                    putString(
+                        ELEMENT,
+                        BottomNavPlayerSelection.ALL.name)
+                })
+            }
         }
         setPlayerViewListeners()
         setBottomNavListener()
         setPlayerControllerListener()
-        trackViewModel.isEmptyTrackList().onEach {
-            if (it) {
-                supportFragmentManager.commit {
-                    replace(R.id.fragment_container, TrackNotFound::class.java, Bundle())
-                }
-                binding.bottomNav.visibility = View.GONE
-            }
-        }
+
         onBackPressedDispatcher.addCallback(this) {
             if (binding.playerView.playerView.visibility == View.VISIBLE) {
                 binding.playerView.playerView.visibility = View.GONE
@@ -140,6 +129,40 @@ class MainActivity : AppCompatActivity(), PlayerButtonsListener {
                 finish()
             }
         }
+    }
+    private val REQ_CODE = 0
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        if (requestCode == REQ_CODE) {
+            for (i in grantResults.indices) {
+                if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                    notGrantedPermission.remove(permissions[i])
+                }
+            }
+            trackViewModel.onReinit()
+            if (notGrantedPermission.isEmpty()) {
+                supportFragmentManager.commit {
+                    replace(R.id.fragment_container, TrackList::class.java, Bundle().apply {
+                        putString(
+                            ELEMENT,
+                            BottomNavPlayerSelection.ALL.name)
+                    })
+                }
+            } else {
+                supportFragmentManager.commit {
+                    replace(R.id.fragment_container, TrackNotFound::class.java, Bundle().apply {
+                        putString(
+                            ELEMENT,
+                            BottomNavPlayerSelection.ALL.name)
+                    })
+                }
+                Snackbar.make(binding.root, "Permission not granted", Snackbar.LENGTH_LONG).show()
+            }
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
     override fun onDestroy() {
         exoPlayer.apply {
