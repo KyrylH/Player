@@ -1,31 +1,31 @@
 package com.example.player.viewmodel
 
 import android.app.Application
-import android.content.Context
-import android.net.Uri
+import android.content.ContentResolver
 import android.provider.MediaStore
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import com.example.player.data.track.repository.TrackRepository
-import com.example.player.database.TrackDataBase
 import com.example.player.model.Track
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 
 //    viewmodel for track activity
 //    it is responsible for fetching data from content provider and updating the database
 //    it also provides data to the activity
-class TrackViewModel (
-    private val application: Application
-): AndroidViewModel(application) {
-    private val trackRepository: TrackRepository by lazy {
-        TrackRepository(TrackDataBase.getDataBase(application.applicationContext))
-    }
+@HiltViewModel
+class TrackViewModel @Inject constructor(
+    private val trackRepository: TrackRepository,
+    private val contentResolver: ContentResolver
+): ViewModel() {
 
     private val _trackList: MutableLiveData<List<Track>> = initTrackList()
 
@@ -93,7 +93,7 @@ class TrackViewModel (
             MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
         }
         val result = viewModelScope.async {
-            application.applicationContext.contentResolver.query(
+            contentResolver.query(
                 mediaUri,
                 PROJ,
                 SELECTION,

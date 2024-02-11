@@ -8,25 +8,21 @@ import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
-import android.util.Log
 import android.view.View
 import android.widget.SeekBar
-import android.widget.Toast
 import androidx.activity.addCallback
+import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.commit
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.ViewModelProvider
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.ui.PlayerNotificationManager.Visibility
 import com.bumptech.glide.Glide
 import com.example.player.R
 import com.example.player.databinding.ActivityMainBinding
@@ -36,24 +32,16 @@ import com.example.player.ui.fragment.tracklist.TrackList
 import com.example.player.ui.fragment.tracknotfound.TrackNotFound
 import com.example.player.util.BottomNavPlayerSelection
 import com.example.player.util.DurationCalcUtil
-import com.example.player.util.viewModelFactory
 import com.example.player.viewmodel.TrackViewModel
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.onEmpty
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity(), PlayerButtonsListener {
     private lateinit var exoPlayer: ExoPlayer
     private var bound = false
     private var selection = BottomNavPlayerSelection.ALL
-
-    private val trackViewModel : TrackViewModel by lazy {
-        ViewModelProvider(
-            this@MainActivity, viewModelFactory {
-                TrackViewModel(application)
-            }
-        )[TrackViewModel::class.java]
-    }
+    private val trackViewModel : TrackViewModel by viewModels()
     private val binding: ActivityMainBinding by lazy {
         ActivityMainBinding.inflate(layoutInflater)
     }
@@ -62,6 +50,7 @@ class MainActivity : AppCompatActivity(), PlayerButtonsListener {
             val binder = service as PlayerService.PlayerBinder
             exoPlayer = binder.getService().exoPlayer
             bound = true
+            applicationContext
 
             setMediaItems()
             exoPlayer.addListener(object : Player.Listener {
