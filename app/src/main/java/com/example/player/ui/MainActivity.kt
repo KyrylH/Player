@@ -35,10 +35,12 @@ import com.example.player.util.DurationCalcUtil
 import com.example.player.viewmodel.TrackViewModel
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity(), PlayerButtonsListener {
-    private lateinit var exoPlayer: ExoPlayer
+    @Inject
+    lateinit var exoPlayer: ExoPlayer
     private var bound = false
     private var selection = BottomNavPlayerSelection.ALL
     private val trackViewModel : TrackViewModel by viewModels()
@@ -47,10 +49,7 @@ class MainActivity : AppCompatActivity(), PlayerButtonsListener {
     }
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-            val binder = service as PlayerService.PlayerBinder
-            exoPlayer = binder.getService().exoPlayer
             bound = true
-            applicationContext
 
             setMediaItems()
             exoPlayer.addListener(object : Player.Listener {
@@ -89,10 +88,10 @@ class MainActivity : AppCompatActivity(), PlayerButtonsListener {
             ActivityCompat.requestPermissions(this,
                 OLDER_VERSION_PERMISSION, REQ_CODE)
         }
-        for (p in if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+        for (permission in if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
             LATEST_VERSION_PERMISSIONS else OLDER_VERSION_PERMISSION) {
-            if (checkSelfPermission(p) != PackageManager.PERMISSION_GRANTED) {
-                notGrantedPermission.add(p)
+            if (checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
+                notGrantedPermission.add(permission)
             }
         }
         doBindService(this)
@@ -119,7 +118,6 @@ class MainActivity : AppCompatActivity(), PlayerButtonsListener {
             }
         }
     }
-    private val REQ_CODE = 0
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -289,13 +287,13 @@ class MainActivity : AppCompatActivity(), PlayerButtonsListener {
             .into(binding.coverImage)
     }
 
-    private fun doBindService(ctx: Context) {
-        val intent = Intent(ctx, PlayerService::class.java)
-        ctx.bindService(intent, connection, Context.BIND_AUTO_CREATE)
+    private fun doBindService(context: Context) {
+        val intent = Intent(context, PlayerService::class.java)
+        context.bindService(intent, connection, Context.BIND_AUTO_CREATE)
     }
-    private fun doUnbindService(ctx: Context) {
+    private fun doUnbindService(context: Context) {
         if (bound) {
-            ctx.unbindService(connection)
+            context.unbindService(connection)
         }
     }
 

@@ -1,9 +1,7 @@
 package com.example.player.viewmodel
 
-import android.app.Application
 import android.content.ContentResolver
 import android.provider.MediaStore
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel

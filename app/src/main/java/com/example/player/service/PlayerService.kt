@@ -21,9 +21,14 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerNotificationManager
 import com.example.player.R
+import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.android.HiltAndroidApp
+import javax.inject.Inject
 
 @OptIn(UnstableApi::class)
+@AndroidEntryPoint
 class PlayerService : Service() {
+    @Inject
     lateinit var exoPlayer : ExoPlayer
     private val binder = PlayerBinder()
     private lateinit var notificationManager: PlayerNotificationManager
@@ -79,12 +84,6 @@ class PlayerService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        val audioAttributes = AudioAttributes.Builder()
-            .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
-            .setUsage(C.USAGE_MEDIA)
-            .build()
-        exoPlayer = ExoPlayer.Builder(this).build()
-        exoPlayer.setAudioAttributes(audioAttributes, true)
         val notificationId = 1999999999
         val channelId = R.string.app_name.toString() + "_channel"
         notificationManager = PlayerNotificationManager

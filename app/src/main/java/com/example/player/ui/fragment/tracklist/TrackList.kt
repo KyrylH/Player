@@ -1,20 +1,18 @@
 package com.example.player.ui.fragment.tracklist
 
-import android.graphics.Bitmap
 import android.os.Build
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.RequiresApi
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.player.adapter.TrackItemAdapter
 import com.example.player.databinding.FragmentTracklistBinding
-import com.example.player.model.Track
 import com.example.player.ui.MainActivity
 import com.example.player.ui.PlayerButtonsListener
 import com.example.player.util.BottomNavPlayerSelection
