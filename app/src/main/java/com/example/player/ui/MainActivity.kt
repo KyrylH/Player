@@ -119,7 +119,6 @@ class MainActivity : AppCompatActivity(), PlayerButtonsListener {
             }
         }
     }
-    private val REQ_CODE = 0
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
