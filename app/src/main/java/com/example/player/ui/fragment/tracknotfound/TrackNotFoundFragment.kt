@@ -7,7 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import com.example.player.databinding.FragmentTrackNotFoundBinding
 
-class TrackNotFound : Fragment() {
+class TrackNotFoundFragment : Fragment() {
     private val binding : FragmentTrackNotFoundBinding by lazy {
         FragmentTrackNotFoundBinding.inflate(layoutInflater)
     }
@@ -26,6 +26,6 @@ class TrackNotFound : Fragment() {
 
         @JvmStatic
         fun newInstance() =
-            TrackNotFound()
+            TrackNotFoundFragment()
     }
 }

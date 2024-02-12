@@ -29,7 +29,7 @@ import com.example.player.databinding.ActivityMainBinding
 import com.example.player.service.PlayerService
 import com.example.player.ui.fragment.tracklist.ELEMENT
 import com.example.player.ui.fragment.tracklist.TrackList
-import com.example.player.ui.fragment.tracknotfound.TrackNotFound
+import com.example.player.ui.fragment.tracknotfound.TrackNotFoundFragment
 import com.example.player.util.BottomNavPlayerSelection
 import com.example.player.util.DurationCalcUtil
 import com.example.player.viewmodel.TrackViewModel
@@ -140,7 +140,7 @@ class MainActivity : AppCompatActivity(), PlayerButtonsListener {
                 }
             } else {
                 supportFragmentManager.commit {
-                    replace(R.id.fragment_container, TrackNotFound::class.java, Bundle().apply {
+                    replace(R.id.fragment_container, TrackNotFoundFragment::class.java, Bundle().apply {
                         putString(
                             ELEMENT,
                             BottomNavPlayerSelection.ALL.name)
